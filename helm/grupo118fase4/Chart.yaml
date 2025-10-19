@@ -1,0 +1,6 @@
+apiVersion: v2
+name: grupo118fase4
+description: A Helm chart for .NET 8 API - Grupo 118 Fase 4
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
