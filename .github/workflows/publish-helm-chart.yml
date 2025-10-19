@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
-  HELM_CHART_NAME: ${{ secrets.HELM_CHART_NAME }}
+  HELM_CHART_NAME: 'grupo118fase4'
   ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
   ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
 
