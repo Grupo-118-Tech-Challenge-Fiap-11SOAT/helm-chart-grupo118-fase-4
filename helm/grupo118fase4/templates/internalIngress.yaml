@@ -14,18 +14,13 @@ spec:
   ingressClassName: {{ . }}
   {{- end }}
   rules:
-    {{- range .Values.internalIngress.hosts }}
-    - host: {{ .host | quote }}
-      http:
+    - http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            pathType: {{ .pathType }}
-            backend:
-              service:
-                name: {{ .serviceName }}
-                port:
-                  number: {{ .servicePort }}
-          {{- end }}
-    {{- end }}
+        - backend:
+            service:
+              name: {{ (index .Values.service.instances 0).name }}
+              port:
+                number: {{ (index .Values.service.instances 0).port }}
+          path: {{ .Values.internalIngress.path }}
+          pathType: Prefix
 {{- end }}
