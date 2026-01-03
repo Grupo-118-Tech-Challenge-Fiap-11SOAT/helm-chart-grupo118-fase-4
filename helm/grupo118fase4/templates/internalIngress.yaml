@@ -22,5 +22,5 @@ spec:
               port:
                 number: {{ (index .Values.service.instances 0).port }}
           path: {{ .Values.internalIngress.path }}
-          pathType: Prefix
+          pathType: {{ .Values.internalIngress.pathType }}
 {{- end }}
