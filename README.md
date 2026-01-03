@@ -154,27 +154,90 @@ service:
       type: ClusterIP
       port: 80
       targetPort: 8080
+      portName: http  # Optional, used for health probes
       protocol: TCP
       labels: {}
       annotations: {}
 ```
 
+**Note:** The `portName` field (e.g., `http`) can be used in health probes instead of port numbers for more maintainable configurations.
+
 ### Internal Ingress Configuration
+
+The internal ingress creates a single ingress rule that routes traffic to the first service instance defined in `service.instances`.
+
+**Basic Configuration:**
 
 ```yaml
 internalIngress:
   enabled: true
-  className: "nginx"
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-  hosts:
-    - host: api-internal.local
-      paths:
-        - path: /
-          pathType: Prefix
-          serviceName: grupo118fase4-service
-          servicePort: 80
+  className: "nginx-internal-static"
+  path: /my-api
+  pathType: Prefix
+  annotations: {}
+  tls: []
 ```
+
+**Advanced Configuration with Regex Path Rewriting:**
+
+For APIs that need path rewriting (e.g., routing `/my-api/endpoint` to `/endpoint`), use regex patterns:
+
+```yaml
+internalIngress:
+  enabled: true
+  className: "nginx-internal-static"
+  path: /my-api(/$)(.*)
+  pathType: ImplementationSpecific
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  tls: []
+```
+
+**Key Parameters:**
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `enabled` | Enable/disable internal ingress | `true` |
+| `className` | Ingress class name (e.g., `nginx-internal-static`) | `"nginx"` |
+| `path` | URL path for routing (supports regex) | `/` |
+| `pathType` | Path matching type (`Prefix`, `Exact`, `ImplementationSpecific`) | `Prefix` |
+| `annotations` | Additional ingress annotations | `{}` |
+| `tls` | TLS configuration array | `[]` |
+
+**Important Notes:**
+- The ingress automatically routes to the **first service** in `service.instances`
+- For regex paths, use `pathType: ImplementationSpecific` and set the `use-regex` annotation
+- The `className` should match your cluster's internal ingress controller
+
+**Real-World Example:**
+
+Here's a complete example based on the [poc-api-dotnet-cicd-template-usage-fase4](https://github.com/Grupo-118-Tech-Challenge-Fiap-11SOAT/poc-api-dotnet-cicd-template-usage-fase4/blob/main/helm/values-production.yaml):
+
+```yaml
+service:
+  instances:
+    - name: poc-api-dotnet-cicd-template-usage-fase4
+      type: ClusterIP
+      port: 80
+      targetPort: 8080
+      portName: http
+
+internalIngress:
+  enabled: true
+  className: "nginx-internal-static"
+  path: /poc-api(/$)(.*)
+  pathType: ImplementationSpecific
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  tls: []
+```
+
+This configuration:
+- Routes requests from `/poc-api/endpoint` to `/endpoint` in your API
+- Uses the internal NGINX ingress controller
+- Automatically strips the `/poc-api` prefix when forwarding to the service
 
 ### Autoscaling (HPA)
 
@@ -280,13 +343,12 @@ service:
 
 internalIngress:
   enabled: true
-  hosts:
-    - host: payment-api.internal
-      paths:
-        - path: /api/payment
-          pathType: Prefix
-          serviceName: payment-api-service
-          servicePort: 80
+  className: "nginx-internal-static"
+  path: /api/payment(/$)(.*)
+  pathType: ImplementationSpecific
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
 
 secret:
   enabled: true
@@ -347,13 +409,12 @@ service:
 
 internalIngress:
   enabled: true
-  hosts:
-    - host: order-api.internal
-      paths:
-        - path: /api/orders
-          pathType: Prefix
-          serviceName: order-api-service
-          servicePort: 80
+  className: "nginx-internal-static"
+  path: /api/orders(/$)(.*)
+  pathType: ImplementationSpecific
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
 
 configMap:
   enabled: true

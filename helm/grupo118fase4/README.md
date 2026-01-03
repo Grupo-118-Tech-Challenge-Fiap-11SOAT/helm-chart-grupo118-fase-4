@@ -73,20 +73,35 @@ service:
 
 ### Internal Ingress for API Gateway
 
+**Basic Configuration:**
+
 ```yaml
 internalIngress:
   enabled: true
-  className: "nginx"
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-  hosts:
-    - host: api-internal.local
-      paths:
-        - path: /
-          pathType: Prefix
-          serviceName: my-api-service
-          servicePort: 80
+  className: "nginx-internal-static"
+  path: /my-api
+  pathType: Prefix
+  annotations: {}
+  tls: []
 ```
+
+**Advanced Configuration with Path Rewriting:**
+
+For APIs that need path rewriting (e.g., routing `/my-api/endpoint` to `/endpoint`):
+
+```yaml
+internalIngress:
+  enabled: true
+  className: "nginx-internal-static"
+  path: /my-api(/$)(.*)
+  pathType: ImplementationSpecific
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  tls: []
+```
+
+**Note:** The ingress automatically routes to the first service in `service.instances`.
 
 ### HPA Configuration
 
@@ -168,13 +183,12 @@ service:
 
 internalIngress:
   enabled: true
-  hosts:
-    - host: payment-api.internal
-      paths:
-        - path: /api/payment
-          pathType: Prefix
-          serviceName: payment-api-service
-          servicePort: 80
+  className: "nginx-internal-static"
+  path: /api/payment(/$)(.*)
+  pathType: ImplementationSpecific
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
 
 secret:
   enabled: true
@@ -202,13 +216,12 @@ service:
 
 internalIngress:
   enabled: true
-  hosts:
-    - host: order-api.internal
-      paths:
-        - path: /api/orders
-          pathType: Prefix
-          serviceName: order-api-service
-          servicePort: 80
+  className: "nginx-internal-static"
+  path: /api/orders(/$)(.*)
+  pathType: ImplementationSpecific
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
 
 configMap:
   enabled: true

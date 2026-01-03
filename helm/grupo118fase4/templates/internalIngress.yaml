@@ -13,6 +13,10 @@ spec:
   {{- with .Values.internalIngress.className }}
   ingressClassName: {{ . }}
   {{- end }}
+  {{- with .Values.internalIngress.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   rules:
     - http:
         paths:
