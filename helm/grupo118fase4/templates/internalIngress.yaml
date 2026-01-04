@@ -1,0 +1,30 @@
+{{- if .Values.internalIngress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "grupo118fase4.fullname" . }}-internal
+  labels:
+    {{- include "grupo118fase4.labels" . | nindent 4 }}
+  {{- with .Values.internalIngress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.internalIngress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- with .Values.internalIngress.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    - http:
+        paths:
+        - backend:
+            service:
+              name: {{ (index .Values.service.instances 0).name }}
+              port:
+                number: {{ (index .Values.service.instances 0).port }}
+          path: {{ .Values.internalIngress.path }}
+          pathType: {{ .Values.internalIngress.pathType }}
+{{- end }}
